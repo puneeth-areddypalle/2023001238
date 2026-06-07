@@ -129,3 +129,54 @@ LIMIT 5;
 Without indexes, the database checks every record, which is slow for large data.
 
 With indexes, the database can directly find matching records, so search and filtering become faster.
+
+
+# Stage 4
+
+## Scaling and Performance Improvements
+
+When the notification system grows, performance can be improved using caching, pagination, and lazy loading.
+
+## Caching
+
+Frequently accessed notifications can be stored in cache using Redis.
+
+Benefits:
+- Faster response time
+- Less database load
+- Better performance for repeated requests
+
+## Pagination
+
+Instead of loading all notifications at once, notifications can be loaded page by page.
+
+Example:
+
+GET /api/notifications?page=1&limit=10
+
+Benefits:
+- Faster loading
+- Less memory usage
+- Better user experience
+
+## Lazy Loading
+
+Notifications can be loaded only when the user scrolls or requests more data.
+
+Benefits:
+- Reduces initial page load time
+- Loads only required data
+- Improves frontend performance
+
+## Archiving Old Notifications
+
+Old notifications can be moved to archive storage.
+
+Benefits:
+- Main database remains smaller
+- Recent notifications load faster
+- Long-term data is still available
+
+## Conclusion
+
+Using caching, pagination, lazy loading, and archiving helps the notification system handle large amounts of data efficiently.

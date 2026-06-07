@@ -180,3 +180,64 @@ Benefits:
 ## Conclusion
 
 Using caching, pagination, lazy loading, and archiving helps the notification system handle large amounts of data efficiently.
+
+# Stage 5
+
+## Shortcomings in Current Implementation
+
+The current implementation sends email, saves to database, and pushes in-app notifications one by one inside a loop.
+
+Problems:
+- It is slow for 50,000 students.
+- If email fails midway, remaining students may not receive notifications.
+- No retry mechanism is available.
+- No failure tracking is available.
+- Email sending, database saving, and app notification are tightly connected.
+- One failure can affect the complete process.
+
+## What Happens If Email Fails for 200 Students?
+
+The failed students should be tracked separately.
+
+Their notification status should be marked as failed or retrying.
+
+The system should retry sending emails automatically.
+
+If retry also fails multiple times, the failed jobs should be moved to a dead-letter queue for manual checking.
+
+## Better Design
+
+A queue-based asynchronous design should be used.
+
+Flow:
+1. HR clicks Notify All.
+2. A notification batch is created.
+3. Notification records are saved in the database with pending status.
+4. Email jobs are added to an email queue.
+5. In-app notification jobs are added to an app notification queue.
+6. Worker services process the jobs in the background.
+7. Failed jobs are retried.
+8. Final status is updated as sent, failed, or retrying.
+
+## Should DB Save and Email Sending Happen Together?
+
+No.
+
+Database saving and email sending should not happen tightly together.
+
+Reason:
+- Database operation is usually fast.
+- Email API may be slow or fail.
+- If both are combined, one failure can affect the other.
+- Separate processing improves reliability and speed.
+
+## Revised Pseudocode
+
+```pseudo
+function notify_all(student_ids, message):
+    batch_id = create_notification_batch(message)
+
+    for student_id in student_ids:
+        save_notification(student_id, message, status="pending")
+        add_to_email_queue(student_id, message, batch_id)
+        add_to_app_queue(student_id, message, batch_id)
